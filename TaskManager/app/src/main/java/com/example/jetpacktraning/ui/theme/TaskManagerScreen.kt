@@ -21,22 +21,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpacktraning.R
+import com.example.jetpacktraning.TaskStorage
 
 
 @Composable
@@ -61,17 +67,27 @@ fun ManagerScreen() {
 }
 
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskSection(
     onNext: (Tasks) -> Unit
+
 ) {
+
+    val dismissState = rememberSwipeToDismissBoxState()
+
+
+
+    val context = LocalContext.current
+    val tasks by TaskStorage.getTasks(context).collectAsState(initial = emptyList())
+    val scope = rememberCoroutineScope()
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        val tasks = TaskRepository.getAllTasks()
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -121,8 +137,6 @@ fun TaskSection(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(text = task.name, color = Color.White, fontSize = 18.sp)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            }
                         }
 
                         Column(horizontalAlignment = Alignment.End) {
@@ -132,13 +146,10 @@ fun TaskSection(
                                 fontSize = 14.sp
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-
-
                         }
                     }
                 }
             }
-
         }
     }
 }

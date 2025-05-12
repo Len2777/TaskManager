@@ -73,7 +73,7 @@ fun TopBar(task : Tasks, onBack: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            IconButton(  onClick = {onBack()},
+            IconButton(onClick = {onBack()},
                 modifier = Modifier.width(40.dp)) {
 
             Image(

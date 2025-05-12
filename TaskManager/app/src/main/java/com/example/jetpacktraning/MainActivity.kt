@@ -37,8 +37,8 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun GetBottomBar(){
         val navController = rememberNavController()
-        NavHost(navController = navController, startDestination = Routes.Time_Screen){
-            composable(Routes.Time_Screen) {
+        NavHost(navController = navController, startDestination = Routes.Task_Screen){
+            composable(Routes.Task_Screen) {
                 ButtonNavigationBar()
              }
 

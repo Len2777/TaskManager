@@ -41,10 +41,10 @@ fun ButtonNavigationBar() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.Time_Screen,
+            startDestination = Routes.Task_Screen,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Routes.Time_Screen) { ManagerScreen() }
+            composable(Routes.Task_Screen) { ManagerScreen() }
             composable(Routes.Plus_Screen) { AddNewActionSection() }  // <-- !!!
             composable(Routes.Search_Screen) { Text("LOL") }  // <-- !!!
         }
@@ -60,7 +60,7 @@ fun NavigationBar(
     val items = listOf(
         NavItemState(
             title = "Time",
-            route = Routes.Time_Screen,
+            route = Routes.Task_Screen,
             selectedIcon = painterResource(id = R.drawable.time),
             unselectedIcon = painterResource(id = R.drawable.time),
             hasBadge = false,
