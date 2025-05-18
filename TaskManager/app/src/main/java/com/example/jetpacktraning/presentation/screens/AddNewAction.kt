@@ -1,4 +1,4 @@
-package com.example.jetpacktraning.ui.theme
+package com.example.jetpacktraning.presentation.screens
 
 
 import androidx.compose.foundation.layout.Box
@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
-import com.example.jetpacktraning.TaskStorage
+import com.example.jetpacktraning.data.TaskStorage
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,10 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -48,11 +44,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpacktraning.R
+import com.example.jetpacktraning.domain.model.Tasks
+import com.example.jetpacktraning.presentation.components.CreateTaskButton
+import com.example.jetpacktraning.presentation.components.GeneralButton
+import com.example.jetpacktraning.presentation.components.NextTaskButton
+import com.example.jetpacktraning.presentation.components.TimeSlider
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 
 @Composable
@@ -60,10 +62,10 @@ fun AddNewActionSection() {
     var currentStep by remember { mutableStateOf(1) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
     var sectionName by remember { mutableStateOf("") }
     var hours by remember { mutableStateOf(0f) }
     var minutes by remember { mutableStateOf(0f) }
-
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when (currentStep) {
@@ -84,22 +86,27 @@ fun AddNewActionSection() {
                 onHoursChange = { hours = it },
                 onMinutesChange = { minutes = it },
                 onCreate = {
-                    TaskRepository.addTask(Tasks(sectionName, hours.toInt(), minutes.toInt()))
+                    val newTask = Tasks(
+                        id = UUID.randomUUID().toString(),
+                        name = sectionName,
+                        hours = hours.toInt(),
+                        minutes = minutes.toInt()
+                    )
                     scope.launch {
-                        TaskStorage.saveTasks(context, TaskRepository.getAllTasks())
+                        val currentTasks = TaskStorage.getTasks(context).first()
+                        TaskStorage.saveTasks(context, listOf(newTask) + currentTasks)
+
+                        sectionName = ""
+                        hours = 0f
+                        minutes = 0f
+                        currentStep = 1
                     }
-                    currentStep = 1
                 },
                 onBack = { currentStep = 2 }
             )
-
         }
-
-
-
     }
 }
-
 
 
 @Composable
@@ -149,7 +156,7 @@ private fun FirstStep(
             }
 
             Image(
-                painter = painterResource(id = com.example.jetpacktraning.R.drawable.baseline_add_24),
+                painter = painterResource(id = R.drawable.baseline_add_24),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(bottom = 30.dp)
@@ -176,8 +183,6 @@ private fun SecondStep(
     onNext: () -> Unit,
     onCancel: () -> Unit
 ) {
-    val isTextEmpty = text.isEmpty()
-
     Box(
         Modifier
             .fillMaxSize()
@@ -260,18 +265,7 @@ private fun SecondStep(
         contentAlignment = Alignment.Center
     ) {
 
-        Button(
-            onClick = onNext,
-            enabled = !isTextEmpty,
-            modifier = Modifier
-                .fillMaxWidth(0.82f)
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isTextEmpty) Color(0xFF444444) else Color(0xFF1C1C2A)
-            )
-        ) {
-            Text("Next", color = if (isTextEmpty) Color.Gray else Color.White)
-        }
+        NextTaskButton(text = text, onNext = onNext)
     }
     Box(
         Modifier
@@ -280,15 +274,7 @@ private fun SecondStep(
         contentAlignment = Alignment.Center
     ) {
 
-        Button(
-            onClick = onCancel,
-            modifier = Modifier
-                .fillMaxWidth(0.82f)
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-        ) {
-            Text("Cancel", color = Color(0xFF888C9F))
-        }
+        GeneralButton(text = "Cancel", onClick = onCancel)
     }
 }
 
@@ -406,7 +392,6 @@ private fun ThirdStep(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-
                     TimeSlider(
                         maxTime = 59f,
                         label = "Minutes",
@@ -425,86 +410,11 @@ private fun ThirdStep(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Button(
-                onClick = onCreate,
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1C1C2A)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text("Create", color = Color.White)
-            }
+            CreateTaskButton(hours = hours,minutes = minutes, onCreate = onCreate)
 
 
-            Button(
-                onClick = onBack,
+            GeneralButton(text = "Back", onClick = onBack)
 
-
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color(0xFF888C9F)
-                ),
-
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = "Back",
-                    fontSize = 15.sp,
-
-                    )
-            }
         }
-
-
     }
 }
-
-@Composable
-private fun TimeSlider(
-    maxTime: Float,
-    label: String,
-    value: Float,
-    onValueChange: (Float) -> Unit,
-) {
-
-    Column {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = label,
-                color = Color.LightGray,
-                fontSize = 14.sp
-            )
-
-            Text(
-                text = value.toInt().toString(),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
-
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-            valueRange = 0f..maxTime,
-            steps = 0,
-            colors = SliderDefaults.colors(
-                thumbColor = Color(0xFF9F66EE),
-                activeTrackColor = Color(0xFF9F66EE),
-                inactiveTrackColor = Color(0xFF9F66EE).copy(alpha = 0.1f)
-            ),
-
-            )
-    }
-}
-

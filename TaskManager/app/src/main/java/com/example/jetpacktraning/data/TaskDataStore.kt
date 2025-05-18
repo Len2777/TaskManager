@@ -1,10 +1,10 @@
-package com.example.jetpacktraning
+package com.example.jetpacktraning.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.example.jetpacktraning.ui.theme.Tasks
+import com.example.jetpacktraning.domain.model.Tasks
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +16,7 @@ object TaskStorage {
     private val TASKS_KEY = stringPreferencesKey("task_list")
     private val gson = Gson()
 
-     suspend fun saveTasks(context: Context, tasks: List<Tasks>) {
+    suspend fun saveTasks(context: Context, tasks: List<Tasks>) {
         val json = gson.toJson(tasks)
         context.taskDataStore.edit { preferences ->
             preferences[TASKS_KEY] = json
@@ -30,4 +30,5 @@ object TaskStorage {
             gson.fromJson(json, type)
         }
     }
+
 }

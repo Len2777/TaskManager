@@ -1,4 +1,4 @@
-package com.example.jetpacktraning.ui.theme
+package com.example.jetpacktraning.presentation.navigation
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
@@ -26,8 +26,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.jetpacktraning.R
-
-
+import com.example.jetpacktraning.presentation.screens.AddNewActionSection
+import com.example.jetpacktraning.presentation.screens.ManagerScreen
+import com.example.jetpacktraning.presentation.navigation.Routes
 
 
 @Composable
@@ -37,7 +38,7 @@ fun ButtonNavigationBar() {
         contentColor = Color.Transparent,
         containerColor = Color.Transparent,
 
-        bottomBar = { Box(modifier = Modifier.height(85.dp).fillMaxWidth()){NavigationBar(navController)}  }
+        bottomBar = { Box(modifier = Modifier.height(100.dp).fillMaxWidth()){NavigationBar(navController)}  }
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -45,8 +46,8 @@ fun ButtonNavigationBar() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Routes.Task_Screen) { ManagerScreen() }
-            composable(Routes.Plus_Screen) { AddNewActionSection() }  // <-- !!!
-            composable(Routes.Search_Screen) { Text("LOL") }  // <-- !!!
+            composable(Routes.AddSection_Screen) { AddNewActionSection() }  // <-- !!!
+            composable(Routes.History_Screen) { Text("LOL") }  // <-- !!!
         }
     }
 }
@@ -68,7 +69,7 @@ fun NavigationBar(
         ),
         NavItemState(
             title = "Add",
-            route = Routes.Plus_Screen,
+            route = Routes.AddSection_Screen,
             selectedIcon = painterResource(id = R.drawable.baseline_add_24),
             unselectedIcon = painterResource(id = R.drawable.baseline_add_24),
             hasBadge = false,
@@ -76,7 +77,7 @@ fun NavigationBar(
         ),
         NavItemState(
             title = "History",
-            route = Routes.Search_Screen,
+            route = Routes.History_Screen,
             selectedIcon = painterResource(id = R.drawable.pie_chart_filled),
             unselectedIcon = painterResource(id = R.drawable.pie_chart_filled),
             hasBadge = false,

@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.jetpacktraning.ui.theme.ButtonNavigationBar
-import com.example.jetpacktraning.ui.theme.Routes
+import com.example.jetpacktraning.presentation.navigation.ButtonNavigationBar
+import com.example.jetpacktraning.presentation.navigation.Routes
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
