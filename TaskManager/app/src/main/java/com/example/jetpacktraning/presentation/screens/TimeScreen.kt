@@ -15,12 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,23 +37,25 @@ import kotlinx.coroutines.delay
 
 
 @Composable
-fun Time_Screen(task : Tasks, onBack: () -> Unit) {
+fun Time_Screen(task: Tasks, onBack: () -> Unit) {
+    val isRunning = remember { mutableStateOf(false) }
 
     TopBar(task = task, onBack = onBack)
-    CircularTimer(task)
+    CircularTimer(task, isRunning)
 }
 
 
 @Composable
-fun TopBar(task : Tasks, onBack: () -> Unit) {
+fun TopBar(task: Tasks, onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 30.dp).navigationBarsPadding(),
+            .padding(top = 30.dp)
+            .navigationBarsPadding(),
         contentAlignment = Alignment.TopStart,
 
 
-    )
+        )
 
     {
         Row(
@@ -63,15 +66,18 @@ fun TopBar(task : Tasks, onBack: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            IconButton(onClick = {onBack()},
-                modifier = Modifier.width(40.dp)) {
-
-            Image(
-                painter = painterResource(id = R.drawable.arrow_back),
-                contentDescription = null,
+            IconButton(
+                onClick = { onBack() },
                 modifier = Modifier.width(40.dp)
+            ) {
 
-            ) }
+                Image(
+                    painter = painterResource(id = R.drawable.arrow_back),
+                    contentDescription = null,
+                    modifier = Modifier.width(40.dp)
+
+                )
+            }
 
             Text(
                 text = task.name,
@@ -80,13 +86,6 @@ fun TopBar(task : Tasks, onBack: () -> Unit) {
 
 
                 )
-
-            Image(
-                painter = painterResource(id = R.drawable.tag_image),
-                contentDescription = null,
-                modifier = Modifier.width(40.dp)
-
-            )
 
 
         }
@@ -98,8 +97,9 @@ fun TopBar(task : Tasks, onBack: () -> Unit) {
 }
 
 @Composable
-fun CircularTimer(task: Tasks) {
+fun CircularTimer(task: Tasks, isRunning: MutableState<Boolean>) {
     val durationMillis = task.minutes * 60_000 + task.hours * 3_600_000
+    var currentState = remember { mutableStateOf(0f) }
 
     val activeBrush = Brush.verticalGradient(
         colors = listOf(
@@ -109,25 +109,32 @@ fun CircularTimer(task: Tasks) {
     )
 
     val inActiveColor = Color(0xFF1B143F)
-    val strokeWidth = 12.dp
+    val strokeWidth = 16.dp
 
     var currentTime by remember { mutableStateOf(durationMillis) }
     var value by remember { mutableStateOf(1f) }
-    var isRunning by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isRunning) {
-        if (isRunning) {
-            while (currentTime > 0) {
+    LaunchedEffect(isRunning.value) {
+        if (isRunning.value) {
+            if (currentTime <= 0L) {
+                currentTime = durationMillis
+            }
+            while (currentTime > 0 && isRunning.value) {
                 delay(100)
                 currentTime -= 100
                 value = currentTime / durationMillis.toFloat()
             }
-            isRunning = false
+            if (currentTime <= 0L) {
+                isRunning.value = false
+                currentState.value = 2f
+            }
         }
     }
 
     Box(
-        Modifier.fillMaxSize().padding(bottom = 64.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(bottom = 64.dp),
         contentAlignment = Alignment.Center
     ) {
 
@@ -153,28 +160,152 @@ fun CircularTimer(task: Tasks) {
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
+        var txtSize by remember { mutableStateOf(0.sp) }
+
+        val timeText = if (hours > 0) {
+            txtSize = 44.sp
+            String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            txtSize = 50.sp
+            String.format("%02d:%02d", minutes, seconds)
+        }
+
         Text(
-            text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
-            fontSize = 44.sp,
+            text = timeText,
+            fontSize = txtSize,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
+
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(bottom = 32.dp),
+            contentAlignment = Alignment.BottomCenter
+        )
+      {
+                ButtonsAtBottom(
+                    currentState = currentState,
+                    isRunning = isRunning,
+                    onStart = { isRunning.value = true },
+                    onStop = { isRunning.value = false },
+                    onQuit = {
+                            currentTime = durationMillis
+                            value = 1f
+
+                    }
+                )
+            }
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(bottom = 32.dp),
-        contentAlignment = Alignment.BottomCenter
+}
+
+@Composable
+fun StopButton(onStop: () -> Unit) {
+
+
+    IconButton(
+        onClick = { onStop() },
+        Modifier.size(64.dp)
     ) {
-        Button(onClick = {
-            if (!isRunning) {
-                currentTime = durationMillis
-                value = 1f
+
+
+        Image(
+            painter = painterResource(id = R.drawable.stop),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize()
+
+        )
+
+    }
+}
+
+@Composable
+fun StartButton(onStart: () -> Unit) {
+        IconButton(
+            onClick = { onStart() },
+            modifier = Modifier.size(64.dp)
+        ) {
+
+        Image(
+            painter = painterResource(id = R.drawable.play),
+            contentDescription = null,
+
+            modifier = Modifier.fillMaxSize()
+
+        )
+
+    }
+}
+
+@Composable
+fun QuitButton(onQuit: () -> Unit) {
+    IconButton(
+        onClick = { onQuit() },
+        modifier = Modifier.size(64.dp)
+    ) {
+
+        Image(
+            painter = painterResource(id = R.drawable.quit),
+            contentDescription = null,
+
+            modifier = Modifier.fillMaxSize()
+
+        )
+
+    }
+}
+
+
+@Composable
+fun ButtonsAtBottom(
+    currentState: MutableState<Float>,
+    isRunning: MutableState<Boolean>,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    onQuit: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp, start = 16.dp, end = 16.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            var text by remember {mutableStateOf("")}
+
+            if (isRunning.value) {
+                StopButton(onStop = onStop)
+                text = "Pause"
+            } else {
+                StartButton(onStart = onStart)
+                text = "Start"
             }
-            isRunning = !isRunning
-        }) {
-            Text(if (isRunning) "Pause" else "Start")
+
+            Text(
+                text = text,
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 14.dp)
+            )
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            QuitButton(onQuit = {
+                onStop()
+                onQuit()
+
+            })
+
+
+            Text(
+                text = "Quit",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 14.dp)
+            )
         }
     }
 }
+

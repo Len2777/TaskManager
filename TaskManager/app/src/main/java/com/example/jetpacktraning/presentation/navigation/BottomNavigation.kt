@@ -28,7 +28,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.jetpacktraning.R
 import com.example.jetpacktraning.presentation.screens.AddNewActionSection
 import com.example.jetpacktraning.presentation.screens.ManagerScreen
-import com.example.jetpacktraning.presentation.navigation.Routes
 
 
 @Composable
@@ -56,7 +55,6 @@ fun ButtonNavigationBar() {
 @Composable
 fun NavigationBar(
     navController: NavController,
-    modifier: Modifier = Modifier
 ) {
     val items = listOf(
         NavItemState(

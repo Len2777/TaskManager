@@ -20,9 +20,7 @@ import androidx.compose.ui.unit.sp
     value: Float,
     onValueChange: (Float) -> Unit,
 ) {
-
     Column {
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
