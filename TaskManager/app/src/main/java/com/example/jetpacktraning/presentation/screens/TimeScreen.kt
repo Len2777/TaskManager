@@ -3,6 +3,7 @@ package com.example.jetpacktraning.presentation.screens
 import androidx.compose.foundation.Canvas
 import com.example.jetpacktraning.R
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +17,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.IconButton
@@ -53,8 +56,6 @@ fun TopBar(task: Tasks, onBack: () -> Unit) {
             .padding(top = 30.dp)
             .navigationBarsPadding(),
         contentAlignment = Alignment.TopStart,
-
-
         )
 
     {
@@ -63,37 +64,31 @@ fun TopBar(task: Tasks, onBack: () -> Unit) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.Absolute.SpaceBetween
         ) {
 
             IconButton(
                 onClick = { onBack() },
-                modifier = Modifier.width(40.dp)
+                modifier = Modifier.width(55.dp)
             ) {
 
                 Image(
                     painter = painterResource(id = R.drawable.arrow_back),
                     contentDescription = null,
-                    modifier = Modifier.width(40.dp)
+                    modifier = Modifier.fillMaxSize()
 
                 )
             }
 
-            Text(
-                text = task.name,
-                color = Color.White,
-                fontSize = 30.sp,
-
-
-                )
-
-
+            Box( contentAlignment = Alignment.TopCenter ) {
+                Text(
+                    text = task.name,
+                    color = Color.White,
+                    fontSize = 30.sp,
+                    )
+            }
         }
-
-
     }
-
-
 }
 
 @Composable
@@ -131,74 +126,69 @@ fun CircularTimer(task: Tasks, isRunning: MutableState<Boolean>) {
         }
     }
 
-    Box(
-        Modifier
+    Column(
+        modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 64.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 16.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Canvas(Modifier.size(240.dp)) {
-            drawArc(
-                color = inActiveColor,
-                startAngle = 0f,
-                sweepAngle = 360f,
-                useCenter = false,
-                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
-            )
+        Box(contentAlignment = Alignment.Center) {
+            Canvas(Modifier.size(240.dp)) {
+                drawArc(
+                    color = inActiveColor,
+                    startAngle = 0f,
+                    sweepAngle = 360f,
+                    useCenter = false,
+                    style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
+                )
 
-            drawArc(
-                brush = activeBrush,
-                startAngle = -90f,
-                sweepAngle = 360f * value,
-                useCenter = false,
-                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
-            )
-        }
-
-        val totalSeconds = currentTime / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-        var txtSize by remember { mutableStateOf(0.sp) }
-
-        val timeText = if (hours > 0) {
-            txtSize = 44.sp
-            String.format("%02d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            txtSize = 50.sp
-            String.format("%02d:%02d", minutes, seconds)
-        }
-
-        Text(
-            text = timeText,
-            fontSize = txtSize,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-
-        Box(
-            Modifier
-                .fillMaxSize()
-                .padding(bottom = 32.dp),
-            contentAlignment = Alignment.BottomCenter
-        )
-      {
-                ButtonsAtBottom(
-                    currentState = currentState,
-                    isRunning = isRunning,
-                    onStart = { isRunning.value = true },
-                    onStop = { isRunning.value = false },
-                    onQuit = {
-                            currentTime = durationMillis
-                            value = 1f
-
-                    }
+                drawArc(
+                    brush = activeBrush,
+                    startAngle = -90f,
+                    sweepAngle = 360f * value,
+                    useCenter = false,
+                    style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
                 )
             }
-    }
 
+            val totalSeconds = currentTime / 1000
+            val hours = totalSeconds / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+
+            val timeText = if (hours > 0) {
+                String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            } else {
+                String.format("%02d:%02d", minutes, seconds)
+            }
+
+            val txtSize = if (hours > 0) 44.sp else 50.sp
+
+            Text(
+                text = timeText,
+                fontSize = txtSize,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        ButtonsAtBottom(
+            currentState = currentState,
+            isRunning = isRunning,
+            onStart = { isRunning.value = true },
+            onStop = { isRunning.value = false },
+            onQuit = {
+                currentTime = durationMillis
+                value = 1f
+            }
+        )
+    }
 }
+
 
 @Composable
 fun StopButton(onStop: () -> Unit) {
