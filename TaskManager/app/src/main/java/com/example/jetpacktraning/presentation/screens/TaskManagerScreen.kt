@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -167,7 +168,11 @@ fun RaceProjectButton(task: Tasks, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(170.dp)
-            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .graphicsLayer(scaleX = scale, scaleY = scale).border(
+                width = 2.dp,
+                brush = gradientBrush,
+                shape = RoundedCornerShape(24.dp)
+            )
             .shadow(8.dp, RoundedCornerShape(20.dp))
             .background(Color(0xFF1C1C2A), shape = RoundedCornerShape(20.dp))
             .clickable(

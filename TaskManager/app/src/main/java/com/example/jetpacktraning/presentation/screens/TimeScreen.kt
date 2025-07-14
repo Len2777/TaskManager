@@ -3,7 +3,6 @@ package com.example.jetpacktraning.presentation.screens
 import androidx.compose.foundation.Canvas
 import com.example.jetpacktraning.R
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,7 +23,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,17 +34,40 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jetpacktraning.domain.model.Tasks
-import kotlinx.coroutines.delay
+import com.example.jetpacktraning.domain.model.TimerViewModel
+
 
 
 @Composable
 fun Time_Screen(task: Tasks, onBack: () -> Unit) {
-    val isRunning = remember { mutableStateOf(false) }
+    val viewModel: TimerViewModel = viewModel(key = "task_${task.id}") {
+        TimerViewModel()
+    }
+    val timeLeft by viewModel.timeLeft.collectAsState()
+    val isRunning by viewModel.isRunning.collectAsState()
+
+    val totalMillis = remember(task) {
+        task.minutes * 60_000L + task.hours * 3_600_000L
+    }
+
+    LaunchedEffect(task.id) {
+        viewModel.initTimer(totalMillis)
+    }
 
     TopBar(task = task, onBack = onBack)
-    CircularTimer(task, isRunning)
+
+    TimerBody(
+        timeLeft = timeLeft,
+        isRunning = isRunning,
+        totalDuration = totalMillis,
+        onStart = { viewModel.startTimer(timeLeft) },
+        onPause = { viewModel.pauseTimer() },
+        onReset = { viewModel.resetTimer() }
+    )
 }
+
 
 
 @Composable
@@ -91,11 +113,10 @@ fun TopBar(task: Tasks, onBack: () -> Unit) {
     }
 }
 
-@Composable
-fun CircularTimer(task: Tasks, isRunning: MutableState<Boolean>) {
-    val durationMillis = task.minutes * 60_000 + task.hours * 3_600_000
-    var currentState = remember { mutableStateOf(0f) }
 
+
+@Composable
+fun TimerBody( timeLeft: Long, isRunning: Boolean, totalDuration: Long, onStart: () -> Unit, onPause: () -> Unit, onReset: () -> Unit){
     val activeBrush = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF9F66EE),
@@ -106,25 +127,7 @@ fun CircularTimer(task: Tasks, isRunning: MutableState<Boolean>) {
     val inActiveColor = Color(0xFF1B143F)
     val strokeWidth = 16.dp
 
-    var currentTime by remember { mutableStateOf(durationMillis) }
-    var value by remember { mutableStateOf(1f) }
-
-    LaunchedEffect(isRunning.value) {
-        if (isRunning.value) {
-            if (currentTime <= 0L) {
-                currentTime = durationMillis
-            }
-            while (currentTime > 0 && isRunning.value) {
-                delay(100)
-                currentTime -= 100
-                value = currentTime / durationMillis.toFloat()
-            }
-            if (currentTime <= 0L) {
-                isRunning.value = false
-                currentState.value = 2f
-            }
-        }
-    }
+    val value = timeLeft.toFloat() / totalDuration.toFloat()
 
     Column(
         modifier = Modifier
@@ -155,16 +158,15 @@ fun CircularTimer(task: Tasks, isRunning: MutableState<Boolean>) {
                 )
             }
 
-            val totalSeconds = currentTime / 1000
+            val totalSeconds = timeLeft / 1000
             val hours = totalSeconds / 3600
             val minutes = (totalSeconds % 3600) / 60
             val seconds = totalSeconds % 60
 
-            val timeText = if (hours > 0) {
+            val timeText = if (hours > 0)
                 String.format("%02d:%02d:%02d", hours, minutes, seconds)
-            } else {
+            else
                 String.format("%02d:%02d", minutes, seconds)
-            }
 
             val txtSize = if (hours > 0) 44.sp else 50.sp
 
@@ -175,20 +177,14 @@ fun CircularTimer(task: Tasks, isRunning: MutableState<Boolean>) {
                 color = Color.White
             )
         }
-
         ButtonsAtBottom(
-            currentState = currentState,
             isRunning = isRunning,
-            onStart = { isRunning.value = true },
-            onStop = { isRunning.value = false },
-            onQuit = {
-                currentTime = durationMillis
-                value = 1f
-            }
+            onStart = onStart,
+            onStop = onPause,
+            onReset = onReset
         )
     }
 }
-
 
 @Composable
 fun StopButton(onStop: () -> Unit) {
@@ -229,9 +225,9 @@ fun StartButton(onStart: () -> Unit) {
 }
 
 @Composable
-fun QuitButton(onQuit: () -> Unit) {
+fun QuitButton(onReset: () -> Unit) {
     IconButton(
-        onClick = { onQuit() },
+        onClick = { onReset() },
         modifier = Modifier.size(64.dp)
     ) {
 
@@ -247,13 +243,13 @@ fun QuitButton(onQuit: () -> Unit) {
 }
 
 
+
 @Composable
 fun ButtonsAtBottom(
-    currentState: MutableState<Float>,
-    isRunning: MutableState<Boolean>,
+    isRunning: Boolean,
     onStart: () -> Unit,
     onStop: () -> Unit,
-    onQuit: () -> Unit
+    onReset: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -265,7 +261,7 @@ fun ButtonsAtBottom(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             var text by remember {mutableStateOf("")}
 
-            if (isRunning.value) {
+            if (isRunning) {
                 StopButton(onStop = onStop)
                 text = "Pause"
             } else {
@@ -282,9 +278,9 @@ fun ButtonsAtBottom(
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            QuitButton(onQuit = {
+            QuitButton(onReset = {
                 onStop()
-                onQuit()
+                onReset()
 
             })
 
