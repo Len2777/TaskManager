@@ -188,8 +188,6 @@ fun TimerBody( timeLeft: Long, isRunning: Boolean, totalDuration: Long, onStart:
 
 @Composable
 fun StopButton(onStop: () -> Unit) {
-
-
     IconButton(
         onClick = { onStop() },
         Modifier.size(64.dp)
@@ -286,7 +284,7 @@ fun ButtonsAtBottom(
 
 
             Text(
-                text = "Quit",
+                text = "Reset",
                 fontSize = 14.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 14.dp)

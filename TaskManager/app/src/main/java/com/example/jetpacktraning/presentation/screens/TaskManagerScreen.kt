@@ -56,9 +56,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jetpacktraning.R
 import com.example.jetpacktraning.data.TaskStorage
 import com.example.jetpacktraning.domain.model.Tasks
+import com.example.jetpacktraning.domain.model.TimerViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -114,6 +116,7 @@ fun TaskSection(
                 )
                 allTasks.firstOrNull()?.let { firstTask ->
                     RaceProjectButton(task = firstTask, onClick = { onNext(firstTask) })
+
                 }
             }
 
@@ -152,6 +155,12 @@ fun TaskSection(
 
 @Composable
 fun RaceProjectButton(task: Tasks, onClick: () -> Unit) {
+    val viewModel: TimerViewModel = viewModel(key = "task_${task.id}") {
+        TimerViewModel()
+    }
+    val timeLeft by viewModel.timeLeft.collectAsState()
+
+
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(Color(0xFF9F66EE), Color(0xFF5532A1))
     )
@@ -213,8 +222,13 @@ fun RaceProjectButton(task: Tasks, onClick: () -> Unit) {
             }
 
             Column(horizontalAlignment = Alignment.End) {
+                val totalSeconds = timeLeft / 1000
+                val hours = totalSeconds / 3600
+                val minutes = (totalSeconds % 3600) / 60
+                val seconds = totalSeconds % 60
+
                 Text(
-                    text = String.format("%02d:%02d:00", task.hours, task.minutes),
+                    text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.SemiBold
